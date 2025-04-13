@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+
 
 class RegisterActivity : AppCompatActivity() {
 
@@ -24,8 +26,9 @@ class RegisterActivity : AppCompatActivity() {
         setContentView(R.layout.activity_register)
 
         auth = FirebaseAuth.getInstance()
+        val db = FirebaseFirestore.getInstance()
 
-        // Inisialisasi views
+
         etFirstName = findViewById(R.id.etFirstName)
         etLastName = findViewById(R.id.etLastName)
         etIdKaryawan = findViewById(R.id.etIdKaryawan)
@@ -47,10 +50,25 @@ class RegisterActivity : AppCompatActivity() {
             auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        Toast.makeText(this, "Registrasi berhasil", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, LoginActivity::class.java))
-                        finish()
-                    } else {
+                        val uid = auth.currentUser?.uid ?: ""
+                        val user = hashMapOf(
+                            "firstName" to etFirstName.text.toString().trim(),
+                            "lastName" to etLastName.text.toString().trim(),
+                            "idKaryawan" to etIdKaryawan.text.toString().trim(),
+                            "email" to email
+                        )
+
+                        db.collection("users").document(uid).set(user)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Registrasi berhasil", Toast.LENGTH_SHORT).show()
+                                startActivity(Intent(this, LoginActivity::class.java))
+                                finish()
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "Gagal simpan data: ${e.message}", Toast.LENGTH_LONG).show()
+                            }
+
+                } else {
                         Toast.makeText(this, "Registrasi gagal: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                     }
                 }
