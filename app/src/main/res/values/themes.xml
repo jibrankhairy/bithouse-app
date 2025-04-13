@@ -1,0 +1,15 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.BitApp" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Ganti warna default Material -->
+        <item name="colorPrimary">@color/secondary</item>
+        <item name="colorPrimaryContainer">@color/secondary</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryContainer">@color/secondary</item>
+        <item name="colorOnSecondary">@color/white</item>
+    </style>
+
+    <style name="Theme.BitApp" parent="Base.Theme.BitApp" />
+</resources>

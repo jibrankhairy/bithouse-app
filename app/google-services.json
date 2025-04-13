@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "349788437408",
+    "project_id": "appbit-finger",
+    "storage_bucket": "appbit-finger.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:349788437408:android:42ffaafffc1a06ebb442c5",
+        "android_client_info": {
+          "package_name": "com.example.bitapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2cLcdnPNISMynNlYHuBFHw72sR1lUutU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
