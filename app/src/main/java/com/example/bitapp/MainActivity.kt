@@ -2,22 +2,26 @@ package com.example.bitapp
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var auth: FirebaseAuth
-    private val client = OkHttpClient()
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(5, TimeUnit.SECONDS)
+        .build()
     private lateinit var firestore: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,38 +61,72 @@ class MainActivity : AppCompatActivity() {
         userRef.get().addOnSuccessListener { document ->
             if (document != null && document.exists()) {
                 val userData = document.data
+                val idKaryawan = userData?.get("idKaryawan")?.toString() ?: ""
+                val firstName = userData?.get("firstName")?.toString() ?: ""
+                val lastName = userData?.get("lastName")?.toString() ?: ""
 
-                val json = """
-                    {
-                        "uid": "$userId"
-                    }
-                """.trimIndent()
-
-                val mediaType = "application/json; charset=utf-8".toMediaType()
-                val body = json.toRequestBody(mediaType)
-
-                val request = Request.Builder()
-                    .url("http://192.168.1.11:3000/api/register-fingerprint") // ← ganti IP sesuai laptop/ESP bro
-                    .post(body)
+                // Step 1: Trigger ESP32 untuk scan jari
+                val espRequest = Request.Builder()
+                    .url("http://192.168.1.8/start-scan") // GANTI IP INI sesuai IP ESP32 kamu
                     .build()
 
-                client.newCall(request).enqueue(object : Callback {
+                client.newCall(espRequest).enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         runOnUiThread {
-                            Toast.makeText(this@MainActivity, "Gagal kirim ke ESP32: ${e.message}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@MainActivity, "ESP32 tidak bisa dihubungi", Toast.LENGTH_SHORT).show()
                         }
+                        Log.e("ESP32", "Gagal hubungi ESP32: ${e.message}")
                     }
 
                     override fun onResponse(call: Call, response: Response) {
-                        val responseText = response.body?.string()
-                        runOnUiThread {
-                            if (response.isSuccessful) {
-                                Toast.makeText(this@MainActivity, "Proses register fingerprint dimulai", Toast.LENGTH_SHORT).show()
-                                saveFingerprintDataToRealtimeDb(userId, userData)
-                            } else {
-                                Toast.makeText(this@MainActivity, "ESP32 error: $responseText", Toast.LENGTH_LONG).show()
+                        val idFingerprint = response.body?.string()?.trim()
+                        Log.d("ESP32", "Respons ESP32: $idFingerprint")
+
+                        if (idFingerprint.isNullOrEmpty()) {
+                            runOnUiThread {
+                                Toast.makeText(this@MainActivity, "ESP32 tidak mengembalikan ID fingerprint", Toast.LENGTH_SHORT).show()
                             }
+                            return
                         }
+
+                        // Step 2: Kirim data lengkap ke server Node.js
+                        val json = """
+                            {
+                                "uid": "$userId",
+                                "id_karyawan": "$idKaryawan",
+                                "firstName": "$firstName",
+                                "lastName": "$lastName",
+                                "id_fingerprint": $idFingerprint
+                            }
+                        """.trimIndent()
+
+                        val mediaType = "application/json; charset=utf-8".toMediaType()
+                        val body = json.toRequestBody(mediaType)
+
+                        val backendRequest = Request.Builder()
+                            .url("http://192.168.1.7:3000/register-fingerprint") // GANTI IP INI ke IP server Node.js
+                            .post(body)
+                            .build()
+
+                        client.newCall(backendRequest).enqueue(object : Callback {
+                            override fun onFailure(call: Call, e: IOException) {
+                                runOnUiThread {
+                                    Toast.makeText(this@MainActivity, "Gagal kirim ke server: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                                Log.e("BACKEND", "Gagal kirim ke backend: ${e.message}")
+                            }
+
+                            override fun onResponse(call: Call, response: Response) {
+                                val responseText = response.body?.string()
+                                runOnUiThread {
+                                    if (response.isSuccessful) {
+                                        Toast.makeText(this@MainActivity, "Fingerprint berhasil diregistrasi", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(this@MainActivity, "Gagal register fingerprint: $responseText", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        })
                     }
                 })
 
@@ -97,24 +135,6 @@ class MainActivity : AppCompatActivity() {
             }
         }.addOnFailureListener {
             Toast.makeText(this, "Gagal ambil data user", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun saveFingerprintDataToRealtimeDb(uid: String, userData: Map<String, Any>?) {
-        if (userData == null) return
-
-        val database = FirebaseDatabase.getInstance()
-        val ref = database.getReference("fingerprints").child(uid)
-
-        val fingerprintData = HashMap<String, Any>()
-        fingerprintData.putAll(userData)
-        fingerprintData["uid"] = uid
-        fingerprintData["fingerprintId"] = "pending" // nanti diupdate sama ESP32 kalau udah scan
-
-        ref.setValue(fingerprintData).addOnSuccessListener {
-            Toast.makeText(this, "Data berhasil disimpan ke Realtime Database", Toast.LENGTH_SHORT).show()
-        }.addOnFailureListener {
-            Toast.makeText(this, "Gagal simpan data ke Realtime Database", Toast.LENGTH_SHORT).show()
         }
     }
 }
