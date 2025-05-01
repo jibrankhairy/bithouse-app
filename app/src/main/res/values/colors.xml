@@ -12,4 +12,5 @@
     <color name="secondary">#1C67F6</color>
     <color name="text_blue">#4A7ACE</color>
     <color name="bg_icon">#B3C9FF</color>
+    <color name="red">#F44336</color>
 </resources>
