@@ -3,7 +3,13 @@
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="light_gray">#F5F5F5</color>
-    <color name="secondary">#166C8F</color>
-    <color name="text_gray">#A3A3A3</color>
+    <color name="primary">#166C8F</color>
+    <color name="text_gray">#868686</color>
     <color name="field_border">#DADADA</color>
+    <color name="light_cream">#FAF3E0</color>
+    <color name="ripple_light">#33000000</color>
+    <color name="purple">#6555F1</color>
+    <color name="secondary">#1C67F6</color>
+    <color name="text_blue">#4A7ACE</color>
+    <color name="bg_icon">#B3C9FF</color>
 </resources>
