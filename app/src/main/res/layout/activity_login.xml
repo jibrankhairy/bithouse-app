@@ -21,15 +21,6 @@
             android:layout_marginTop="40dp"
             android:layout_marginBottom="15dp" />
 
-<!--        <TextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="We build, innovation, and teach"-->
-<!--            android:textColor="@color/secondary"-->
-<!--            android:textSize="14sp"-->
-<!--            android:layout_marginBottom="24dp" />-->
-
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
