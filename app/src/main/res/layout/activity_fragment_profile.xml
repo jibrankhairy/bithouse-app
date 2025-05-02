@@ -21,6 +21,7 @@
             app:cardBackgroundColor="@color/light_cream">
 
             <ImageView
+                android:id="@+id/profileImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_user_profile"
@@ -33,7 +34,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Jibran Khairy Akram"
             android:textSize="18sp"
             android:textColor="@color/black" />
 
@@ -42,7 +42,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="15dp"
-            android:text="ID: 2904"
             android:textSize="14sp"
             android:textColor="@color/text_gray" />
 
@@ -81,7 +80,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="5dp"
-                    android:text="jibran@gmail.com"
                     android:textSize="16sp"
                     android:textColor="@color/white"/>
             </LinearLayout>
