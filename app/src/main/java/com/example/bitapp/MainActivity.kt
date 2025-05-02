@@ -45,8 +45,16 @@ class MainActivity : AppCompatActivity() {
         val user = auth.currentUser
 
         fab_fingerprint.setOnClickListener {
-            sendUserDataToEsp32(user?.uid)
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Konfirmasi")
+                .setMessage("Apakah Anda ingin registrasi fingerprint?")
+                .setPositiveButton("Ya") { _, _ ->
+                    sendUserDataToEsp32(user?.uid)
+                }
+                .setNegativeButton("Batal", null)
+                .show()
         }
+
     }
 
     private fun loadFragment(fragment: Fragment) {
