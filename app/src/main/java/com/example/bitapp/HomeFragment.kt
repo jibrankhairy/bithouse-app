@@ -1,6 +1,7 @@
 package com.example.bitapp
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,11 +9,16 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import okhttp3.*
+import org.json.JSONObject
+import java.io.IOException
 
 class HomeFragment : Fragment() {
 
     private lateinit var usernameText: TextView
     private lateinit var employeeIdText: TextView
+    private lateinit var checkInText: TextView
+    private lateinit var checkOutText: TextView
     private lateinit var viewModel: HomeViewModel
 
     override fun onCreateView(
@@ -23,6 +29,8 @@ class HomeFragment : Fragment() {
 
         usernameText = view.findViewById(R.id.usernameText)
         employeeIdText = view.findViewById(R.id.employeeIdText)
+        checkInText = view.findViewById(R.id.CheckInText)
+        checkOutText = view.findViewById(R.id.CheckOutText)
 
         viewModel = ViewModelProvider(this)[HomeViewModel::class.java]
 
@@ -38,10 +46,52 @@ class HomeFragment : Fragment() {
                 putString("email", profile.email)
                 apply()
             }
+
+            fetchAbsensi(profile.idKaryawan)
         })
 
         viewModel.fetchUserProfile()
 
         return view
+    }
+
+    private fun fetchAbsensi(idKaryawan: String) {
+        val url = "http://192.168.1.7:3000/absensi/$idKaryawan"
+        val request = Request.Builder().url(url).build()
+        val client = OkHttpClient()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                e.printStackTrace()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val responseBody = response.body?.string()
+                Log.d("HomeFragment", "Response body: $responseBody")
+
+                responseBody?.let { body ->
+                    val json = JSONObject(body)
+                    val checkInRaw = json.optString("check_in", "")
+                    val checkOutRaw = json.optString("check_out", "")
+
+                    val checkInTime = extractTime(checkInRaw)
+                    val checkOutTime = extractTime(checkOutRaw)
+
+                    activity?.runOnUiThread {
+                        checkInText.text = checkInTime ?: "—"
+                        checkOutText.text = checkOutTime ?: "—"
+                    }
+                }
+            }
+        })
+    }
+
+    private fun extractTime(datetime: String): String? {
+        return try {
+            val timePart = datetime.split(",").getOrNull(1)?.trim() // "09.58.43"
+            timePart?.split(".")?.take(2)?.joinToString(":") // jadi "09:58"
+        } catch (e: Exception) {
+            null
+        }
     }
 }

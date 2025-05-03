@@ -264,7 +264,6 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginVertical="10dp"
-                            android:text="08:00 am"
                             android:textSize="18sp"
                             android:textColor="@color/black" />
 
@@ -339,7 +338,6 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginVertical="10dp"
-                            android:text="18:00 pm"
                             android:textSize="18sp"
                             android:textColor="@color/black" />
 
