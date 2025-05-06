@@ -4,10 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
-
 
 class LoginActivity : AppCompatActivity() {
 
@@ -29,22 +30,27 @@ class LoginActivity : AppCompatActivity() {
         val etPassword = findViewById<EditText>(R.id.etPassword)
         val btnLogin = findViewById<Button>(R.id.btnLogin)
         val tvToRegister = findViewById<TextView>(R.id.tvToRegister)
+        val rootView = findViewById<LinearLayout>(R.id.main) // Gunakan root layout sebagai anchor Snackbar
 
         btnLogin.setOnClickListener {
             val email = etEmail.text.toString()
             val password = etPassword.text.toString()
 
             if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Email dan password tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                showSnackbar(rootView, "Email dan password tidak boleh kosong", R.color.red)
             } else {
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(this, "Login berhasil", Toast.LENGTH_SHORT).show()
+                            showSnackbar(rootView, "Login berhasil", R.color.secondary)
                             startActivity(Intent(this, MainActivity::class.java))
                             finish()
                         } else {
-                            Toast.makeText(this, "Login gagal: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                            showSnackbar(
+                                rootView,
+                                "Login gagal: ${task.exception?.message}",
+                                R.color.red
+                            )
                         }
                     }
             }
@@ -55,5 +61,12 @@ class LoginActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+    }
+
+    private fun showSnackbar(view: LinearLayout, message: String, colorResId: Int) {
+        Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+            .setBackgroundTint(ContextCompat.getColor(this, colorResId))
+            .setTextColor(ContextCompat.getColor(this, android.R.color.white))
+            .show()
     }
 }
