@@ -17,7 +17,6 @@ class EditProfile : AppCompatActivity() {
     private lateinit var saveButton: Button
     private lateinit var emailText: EditText
 
-
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
@@ -58,6 +57,9 @@ class EditProfile : AppCompatActivity() {
                 val newLastName = lastNameInput.text.toString().trim()
                 val newIdKaryawan = idKaryawanInput.text.toString().trim()
 
+                val sharedPref = getSharedPreferences("user_pref", MODE_PRIVATE)
+                val oldIdKaryawan = sharedPref.getString("idKaryawan", "") ?: ""
+
                 val updates = mapOf(
                     "firstName" to newFirstName,
                     "lastName" to newLastName,
@@ -66,7 +68,38 @@ class EditProfile : AppCompatActivity() {
 
                 db.collection("users").document(uid).update(updates)
                     .addOnSuccessListener {
-                        val sharedPref = getSharedPreferences("user_pref", MODE_PRIVATE)
+                        db.collection("fingerprints").document(uid)
+                            .update(
+                                mapOf(
+                                    "idKaryawan" to newIdKaryawan,
+                                    "firstName" to newFirstName,
+                                    "lastName" to newLastName
+                                )
+                            )
+                            .addOnFailureListener {
+                                Toast.makeText(this, "Gagal update idKaryawan di fingerprints", Toast.LENGTH_SHORT).show()
+                            }
+
+                        if (oldIdKaryawan != newIdKaryawan) {
+                            val oldRef = db.collection("absensi").document(oldIdKaryawan).collection("tanggal")
+                            val newRef = db.collection("absensi").document(newIdKaryawan).collection("tanggal")
+
+                            oldRef.get().addOnSuccessListener { snapshot ->
+                                for (doc in snapshot.documents) {
+                                    val data = doc.data
+                                    if (data != null) {
+                                        newRef.document(doc.id).set(data)
+                                    }
+                                }
+
+                                for (doc in snapshot.documents) {
+                                    oldRef.document(doc.id).delete()
+                                }
+
+                                db.collection("absensi").document(oldIdKaryawan).delete()
+                            }
+                        }
+
                         with(sharedPref.edit()) {
                             putString("firstName", newFirstName)
                             putString("lastName", newLastName)
@@ -75,7 +108,7 @@ class EditProfile : AppCompatActivity() {
                         }
 
                         Toast.makeText(this, "Profil berhasil diperbarui", Toast.LENGTH_SHORT).show()
-                        finish() // kembali ke halaman sebelumnya
+                        finish()
                     }
                     .addOnFailureListener {
                         Toast.makeText(this, "Gagal memperbarui data", Toast.LENGTH_SHORT).show()

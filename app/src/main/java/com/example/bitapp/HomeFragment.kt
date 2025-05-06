@@ -56,7 +56,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun fetchAbsensi(idKaryawan: String) {
-        val url = "http://192.168.1.7:3000/absensi/$idKaryawan"
+        val url = "http://192.168.1.3:3001/absensi/$idKaryawan"
         val request = Request.Builder().url(url).build()
         val client = OkHttpClient()
 
