@@ -1,10 +1,12 @@
 package com.example.bitapp
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -26,6 +28,19 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.activity_fragment_home, container, false)
+
+        val notificationIcon = view.findViewById<FrameLayout>(R.id.notificationIcon)
+        val calendarIcon = view.findViewById<FrameLayout>(R.id.calendarIcon)
+
+        notificationIcon.setOnClickListener {
+            val intent = Intent(requireContext(), Notification::class.java)
+            startActivity(intent)
+        }
+
+        calendarIcon.setOnClickListener {
+            val intent = Intent(requireContext(), Calendar::class.java)
+            startActivity(intent)
+        }
 
         usernameText = view.findViewById(R.id.usernameText)
         employeeIdText = view.findViewById(R.id.employeeIdText)

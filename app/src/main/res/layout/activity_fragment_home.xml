@@ -79,6 +79,7 @@
                         android:gravity="center_vertical">
 
                         <FrameLayout
+                            android:id="@+id/notificationIcon"
                             android:layout_width="42dp"
                             android:layout_height="42dp"
                             android:background="@drawable/circle_border_white"
@@ -86,7 +87,6 @@
                             android:gravity="center">
 
                             <ImageView
-                                android:id="@+id/notificationIcon"
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/ic_notification"
@@ -95,13 +95,13 @@
                         </FrameLayout>
 
                         <FrameLayout
+                            android:id="@+id/calendarIcon"
                             android:layout_width="42dp"
                             android:layout_height="42dp"
                             android:background="@drawable/circle_border_white"
                             android:gravity="center">
 
                             <ImageView
-                                android:id="@+id/calendarIcon"
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/ic_calendar"
