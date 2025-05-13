@@ -26,15 +26,15 @@ class ProfileFragment : Fragment() {
         val view = inflater.inflate(R.layout.activity_fragment_profile, container, false)
 
         val cardEditProfile =view.findViewById<CardView>(R.id.editProfile)
-        val cardSettingsProfile =view.findViewById<CardView>(R.id.settingProfile)
+        val cardFingerprintsProfile =view.findViewById<CardView>(R.id.fingerprintsProfile)
 
 
         cardEditProfile.setOnClickListener {
             val intent = Intent(requireContext(), EditProfile::class.java)
             startActivity(intent)
         }
-        cardSettingsProfile.setOnClickListener {
-            val intent = Intent(requireContext(), SettingsProfile::class.java)
+        cardFingerprintsProfile.setOnClickListener {
+            val intent = Intent(requireContext(), FingerprintsProfile::class.java)
             startActivity(intent)
         }
 

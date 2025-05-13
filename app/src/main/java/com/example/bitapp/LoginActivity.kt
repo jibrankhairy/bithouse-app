@@ -60,6 +60,12 @@ class LoginActivity : AppCompatActivity() {
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
+                            val uid = FirebaseAuth.getInstance().currentUser?.uid
+                            if (uid != null) {
+                                val sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
+                                sharedPreferences.edit().putString("uid", uid).apply()
+                            }
+
                             showSnackbar(rootView, "Login berhasil", R.color.secondary)
                             startActivity(Intent(this, MainActivity::class.java))
                             finish()
