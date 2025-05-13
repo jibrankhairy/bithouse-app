@@ -71,7 +71,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun fetchAbsensi(idKaryawan: String) {
-        val url = "http://192.168.1.3:3001/absensi/$idKaryawan"
+        val url = "http://192.168.1.8:3001/absensi/$idKaryawan"
         val request = Request.Builder().url(url).build()
         val client = OkHttpClient()
 
@@ -86,8 +86,13 @@ class HomeFragment : Fragment() {
 
                 responseBody?.let { body ->
                     val json = JSONObject(body)
-                    val checkInRaw = json.optString("check_in", "")
-                    val checkOutRaw = json.optString("check_out", "")
+                    val data = json.optJSONObject("data")
+
+                    val checkInRaw = data?.optString("check_in", "") ?: ""
+                    val checkOutRaw = data?.optString("check_out", "") ?: ""
+
+                    Log.d("HomeFragment", "checkInRaw: $checkInRaw")
+                    Log.d("HomeFragment", "checkOutRaw: $checkOutRaw")
 
                     val checkInTime = extractTime(checkInRaw)
                     val checkOutTime = extractTime(checkOutRaw)
@@ -98,6 +103,7 @@ class HomeFragment : Fragment() {
                     }
                 }
             }
+
         })
     }
 

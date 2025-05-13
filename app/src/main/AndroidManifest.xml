@@ -27,10 +27,9 @@
         <activity android:name=".RegisterActivity" />
         <activity android:name=".MainActivity" />
         <activity android:name=".EditProfile"/>
+        <activity android:name=".SettingsProfile"/>
         <activity android:name=".Notification"/>
         <activity android:name=".Calendar"/>
-
-
     </application>
 
 </manifest>

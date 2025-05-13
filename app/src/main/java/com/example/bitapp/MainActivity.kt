@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
                 val json = """
                     {
                         "uid": "$uid",
-                        "id_karyawan": "$idKaryawan",
+                        "idKaryawan": "$idKaryawan",
                         "firstName": "$firstName",
                         "lastName": "$lastName"
                     }

@@ -48,15 +48,35 @@
             android:textSize="14sp"
             android:layout_marginBottom="4dp" />
 
-        <EditText
-            android:id="@+id/etPassword"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:inputType="textPassword"
             android:background="@drawable/input_field_background"
-            android:paddingHorizontal="16dp"
-            android:textColor="@color/black"
-            android:textSize="14sp"/>
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:gravity="center_vertical">
+
+            <EditText
+                android:id="@+id/etPassword"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@+id/ivTogglePassword"
+                android:inputType="textPassword"
+                android:background="@android:color/transparent"
+                android:textColor="@color/black"
+                android:textSize="14sp"/>
+
+            <ImageView
+                android:id="@+id/ivTogglePassword"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_eye_off"
+                android:contentDescription="Toggle Password Visibility"/>
+        </RelativeLayout>
+
 
         <LinearLayout
             android:layout_width="match_parent"
