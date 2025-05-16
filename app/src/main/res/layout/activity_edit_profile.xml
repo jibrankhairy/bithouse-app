@@ -57,7 +57,7 @@
                     android:layout_height="match_parent"
                     app:cardCornerRadius="50dp"
                     app:cardElevation="2dp"
-                    app:cardBackgroundColor="@color/light_cream">
+                    app:cardBackgroundColor="@color/white">
 
                     <ImageView
                         android:id="@+id/profileImage"
@@ -75,7 +75,7 @@
                     android:layout_gravity="bottom|end"
                     android:layout_margin="2dp"
                     app:cardCornerRadius="15dp"
-                    app:cardElevation="2dp"
+                    app:cardElevation="4dp"
                     app:cardBackgroundColor="@android:color/white">
 
                     <ImageView

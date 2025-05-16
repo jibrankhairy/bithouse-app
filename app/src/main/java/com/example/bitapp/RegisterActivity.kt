@@ -19,7 +19,7 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var etConfirmPassword: EditText
     private lateinit var etPassword: EditText
     private lateinit var btnRegister: Button
-    private lateinit var btnToLogin: Button
+    private lateinit var tvToLogin: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,14 +36,23 @@ class RegisterActivity : AppCompatActivity() {
         etPassword = findViewById(R.id.etPassword)
         etConfirmPassword = findViewById(R.id.etConfirmPassword)
         btnRegister = findViewById(R.id.btnRegister)
-        btnToLogin = findViewById(R.id.btnToLogin)
+        tvToLogin = findViewById(R.id.tvToLogin)
 
         btnRegister.setOnClickListener {
+            val firstName = etFirstName.text.toString().trim()
+            val lastName = etLastName.text.toString().trim()
+            val idKaryawanText = etIdKaryawan.text.toString().trim()
             val email = etEmail.text.toString().trim()
             val password = etPassword.text.toString().trim()
 
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Email dan Password tidak boleh kosong", Toast.LENGTH_SHORT).show()
+            if (firstName.isEmpty() || lastName.isEmpty() || idKaryawanText.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Semua kolom harus diisi", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val idKaryawan = idKaryawanText.toIntOrNull()
+            if (idKaryawan == null) {
+                Toast.makeText(this, "ID Karyawan harus berupa angka", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -52,9 +61,9 @@ class RegisterActivity : AppCompatActivity() {
                     if (task.isSuccessful) {
                         val uid = auth.currentUser?.uid ?: ""
                         val user = hashMapOf(
-                            "firstName" to etFirstName.text.toString().trim(),
-                            "lastName" to etLastName.text.toString().trim(),
-                            "idKaryawan" to etIdKaryawan.text.toString().trim(),
+                            "firstName" to firstName,
+                            "lastName" to lastName,
+                            "idKaryawan" to idKaryawan,
                             "email" to email
                         )
 
@@ -74,7 +83,7 @@ class RegisterActivity : AppCompatActivity() {
                 }
         }
 
-        btnToLogin.setOnClickListener {
+        tvToLogin.setOnClickListener {
             val intent = Intent(this@RegisterActivity, LoginActivity::class.java)
             startActivity(intent)
             finish()

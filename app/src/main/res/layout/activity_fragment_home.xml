@@ -124,7 +124,7 @@
                         android:layout_height="60dp"
                         app:cardCornerRadius="30dp"
                         app:cardElevation="2dp"
-                        app:cardBackgroundColor="@color/light_cream"
+                        app:cardBackgroundColor="@color/white"
                         android:layout_gravity="center_vertical">
 
                         <ImageView
@@ -268,6 +268,7 @@
                             android:textColor="@color/black" />
 
                         <TextView
+                            android:id="@+id/StatusInText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="On Time"
