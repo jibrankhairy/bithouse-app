@@ -21,7 +21,7 @@ class FingerprintsProfile : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_setting_profile)
+        setContentView(R.layout.activity_fingerprints_profile)
 
         val backButton = findViewById<ImageView>(R.id.backButton)
         backButton.setOnClickListener { finish() }
@@ -63,16 +63,31 @@ class FingerprintsProfile : AppCompatActivity() {
     }
 
     private fun deleteFingerprint(fingerprintKey: String) {
-        uid?.let { currentUid ->
-            firestore.collection("fingerprints").document(currentUid)
-                .update(mapOf(fingerprintKey to FieldValue.delete()))
-                .addOnSuccessListener {
-                    Toast.makeText(this, "Fingerprint dihapus", Toast.LENGTH_SHORT).show()
-                    loadFingerprints()
+        val fingerDataKey = fingerprintKey.replace("id_fingerprint_", "finger_data_")
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Konfirmasi")
+            .setMessage("Apakah Anda ingin menghapus fingerprint ini?")
+            .setPositiveButton("Ya") { _, _ ->
+                uid?.let { currentUid ->
+                    firestore.collection("fingerprints").document(currentUid)
+                        .update(
+                            mapOf(
+                                fingerprintKey to FieldValue.delete(),
+                                fingerDataKey to FieldValue.delete()
+                            )
+                        )
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "Fingerprint dihapus", Toast.LENGTH_SHORT).show()
+                            loadFingerprints()
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(this, "Gagal hapus fingerprint", Toast.LENGTH_SHORT).show()
+                        }
                 }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Gagal hapus fingerprint", Toast.LENGTH_SHORT).show()
-                }
-        }
+            }
+            .setNegativeButton("Batal", null)
+            .show()
     }
+
 }
