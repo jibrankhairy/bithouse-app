@@ -111,7 +111,7 @@
             android:textStyle="bold"
             android:textSize="16sp"
             android:layout_marginTop="24dp"
-            android:background="@drawable/login_button_background" />
+            android:background="@drawable/blue_button_ripple" />
 
         <TextView
             android:id="@+id/tvToRegister"
@@ -122,5 +122,10 @@
             android:textSize="14sp"
             android:layout_marginTop="32dp"
             android:layout_gravity="center_horizontal"/>
+        <View
+            android:id="@+id/snackbarAnchor"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"/>
     </LinearLayout>
 </LinearLayout>

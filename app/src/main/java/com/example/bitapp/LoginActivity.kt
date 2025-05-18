@@ -1,8 +1,13 @@
 package com.example.bitapp
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.InputType
+import android.view.MotionEvent
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -31,9 +36,23 @@ class LoginActivity : AppCompatActivity() {
         val etPassword = findViewById<EditText>(R.id.etPassword)
         val btnLogin = findViewById<Button>(R.id.btnLogin)
         val tvToRegister = findViewById<TextView>(R.id.tvToRegister)
-        val rootView = findViewById<LinearLayout>(R.id.main) // Gunakan root layout sebagai anchor Snackbar
-
         val ivTogglePassword = findViewById<ImageView>(R.id.ivTogglePassword)
+        val snackbarAnchor = findViewById<View>(R.id.snackbarAnchor)
+        val checkRemember = findViewById<CheckBox>(R.id.checkRemember)
+
+
+
+        btnLogin.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(80).start()
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
+                }
+            }
+            false
+        }
 
         var isPasswordVisible = false
 
@@ -41,21 +60,38 @@ class LoginActivity : AppCompatActivity() {
             isPasswordVisible = !isPasswordVisible
             if (isPasswordVisible) {
                 etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                ivTogglePassword.setImageResource(R.drawable.ic_eye) // mata terbuka
+                ivTogglePassword.setImageResource(R.drawable.ic_eye)
             } else {
                 etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                ivTogglePassword.setImageResource(R.drawable.ic_eye_off) // mata tertutup
+                ivTogglePassword.setImageResource(R.drawable.ic_eye_off)
             }
-            // agar cursor tetap di akhir teks
             etPassword.setSelection(etPassword.text.length)
         }
+
+        val sharedPreferences = getSharedPreferences("loginPrefs", MODE_PRIVATE)
+        val isRemembered = sharedPreferences.getBoolean("rememberMe", false)
+
+        if (isRemembered) {
+            val savedEmail = sharedPreferences.getString("email", "")
+            val savedPassword = sharedPreferences.getString("password", "")
+
+            etEmail.setText(savedEmail)
+            etPassword.setText(savedPassword)
+            checkRemember.isChecked = true
+        }
+
 
         btnLogin.setOnClickListener {
             val email = etEmail.text.toString()
             val password = etPassword.text.toString()
 
+
             if (email.isEmpty() || password.isEmpty()) {
-                showSnackbar(rootView, "Email dan password tidak boleh kosong", R.color.red)
+                Snackbar.make(snackbarAnchor, "Email and password cannot be empty", Snackbar.LENGTH_LONG)
+                    .setAnchorView(snackbarAnchor)
+                    .setBackgroundTint(ContextCompat.getColor(this, R.color.red))
+                    .setTextColor(Color.WHITE)
+                    .show()
             } else {
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
@@ -66,15 +102,35 @@ class LoginActivity : AppCompatActivity() {
                                 sharedPreferences.edit().putString("uid", uid).apply()
                             }
 
-                            showSnackbar(rootView, "Login berhasil", R.color.secondary)
-                            startActivity(Intent(this, MainActivity::class.java))
-                            finish()
+                            // ✅ Simpan login jika Remember Me dicentang
+                            val loginPrefs = getSharedPreferences("loginPrefs", MODE_PRIVATE)
+                            if (checkRemember.isChecked) {
+                                loginPrefs.edit()
+                                    .putBoolean("rememberMe", true)
+                                    .putString("email", email)
+                                    .putString("password", password)
+                                    .apply()
+                            } else {
+                                loginPrefs.edit().clear().apply()
+                            }
+
+                            Snackbar.make(snackbarAnchor, "Login Successful!", Snackbar.LENGTH_LONG)
+                                .setAnchorView(snackbarAnchor)
+                                .setBackgroundTint(ContextCompat.getColor(this, R.color.secondary))
+                                .setTextColor(Color.WHITE)
+                                .show()
+
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                startActivity(Intent(this, MainActivity::class.java))
+                                finish()
+                            }, 1000)
+
                         } else {
-                            showSnackbar(
-                                rootView,
-                                "Login gagal: ${task.exception?.message}",
-                                R.color.red
-                            )
+                            Snackbar.make(snackbarAnchor, "Login Failed! Incorrect email or password", Snackbar.LENGTH_LONG)
+                                .setAnchorView(snackbarAnchor)
+                                .setBackgroundTint(ContextCompat.getColor(this, R.color.red))
+                                .setTextColor(Color.WHITE)
+                                .show()
                         }
                     }
             }
@@ -85,12 +141,5 @@ class LoginActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-    }
-
-    private fun showSnackbar(view: LinearLayout, message: String, colorResId: Int) {
-        Snackbar.make(view, message, Snackbar.LENGTH_LONG)
-            .setBackgroundTint(ContextCompat.getColor(this, colorResId))
-            .setTextColor(ContextCompat.getColor(this, android.R.color.white))
-            .show()
     }
 }
