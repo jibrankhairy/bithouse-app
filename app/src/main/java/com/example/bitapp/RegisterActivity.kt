@@ -6,6 +6,14 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import android.text.Editable
+import android.text.TextWatcher
+import com.google.android.material.snackbar.Snackbar
+import android.graphics.Color
+import androidx.core.content.ContextCompat
+import android.os.Handler
+import android.os.Looper
+import android.view.MotionEvent
 
 
 class RegisterActivity : AppCompatActivity() {
@@ -38,6 +46,18 @@ class RegisterActivity : AppCompatActivity() {
         btnRegister = findViewById(R.id.btnRegister)
         tvToLogin = findViewById(R.id.tvToLogin)
 
+        btnRegister.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(80).start()
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
+                }
+            }
+            false
+        }
+
         btnRegister.setOnClickListener {
             val firstName = etFirstName.text.toString().trim()
             val lastName = etLastName.text.toString().trim()
@@ -46,13 +66,21 @@ class RegisterActivity : AppCompatActivity() {
             val password = etPassword.text.toString().trim()
 
             if (firstName.isEmpty() || lastName.isEmpty() || idKaryawanStr.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Semua kolom harus diisi", Toast.LENGTH_SHORT).show()
+                Snackbar.make(findViewById(android.R.id.content), "All fields must be filled in", Snackbar.LENGTH_LONG)
+                    .setAnchorView(R.id.btnRegister)
+                    .setBackgroundTint(ContextCompat.getColor(this, R.color.red))
+                    .setTextColor(Color.WHITE)
+                    .show()
                 return@setOnClickListener
             }
 
             val idKaryawan = idKaryawanStr.toIntOrNull()
             if (idKaryawan == null) {
-                Toast.makeText(this, "ID Karyawan harus berupa angka", Toast.LENGTH_SHORT).show()
+                Snackbar.make(findViewById(android.R.id.content), "Employee ID must be numeric", Snackbar.LENGTH_LONG)
+                    .setAnchorView(R.id.btnRegister)
+                    .setBackgroundTint(ContextCompat.getColor(this, R.color.red))
+                    .setTextColor(Color.WHITE)
+                    .show()
                 return@setOnClickListener
             }
 
@@ -69,19 +97,71 @@ class RegisterActivity : AppCompatActivity() {
 
                         db.collection("users").document(uid).set(user)
                             .addOnSuccessListener {
-                                Toast.makeText(this, "Registrasi berhasil", Toast.LENGTH_SHORT).show()
-                                startActivity(Intent(this, LoginActivity::class.java))
-                                finish()
+                                val snackbar = Snackbar.make(findViewById(android.R.id.content), "Registrasi Successfull!", Snackbar.LENGTH_LONG)
+                                    .setAnchorView(R.id.btnRegister)
+                                    .setBackgroundTint(ContextCompat.getColor(this, R.color.secondary))
+                                    .setTextColor(Color.WHITE)
+
+                                snackbar.show()
+
+                                Handler(Looper.getMainLooper()).postDelayed({
+                                    startActivity(Intent(this, LoginActivity::class.java))
+                                    finish()
+                                }, 1500)
                             }
                             .addOnFailureListener { e ->
-                                Toast.makeText(this, "Gagal simpan data: ${e.message}", Toast.LENGTH_LONG).show()
+                                Snackbar.make(findViewById(android.R.id.content), "Failed to save data: ${e.message}", Snackbar.LENGTH_LONG)
+                                    .setAnchorView(R.id.btnRegister)
+                                    .setBackgroundTint(ContextCompat.getColor(this, R.color.red))
+                                    .setTextColor(Color.WHITE)
+                                    .show()
                             }
-
-                } else {
-                        Toast.makeText(this, "Registrasi gagal: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    } else {
+                        Snackbar.make(findViewById(android.R.id.content), "Registrasi Failed: ${task.exception?.message}", Snackbar.LENGTH_LONG)
+                            .setAnchorView(R.id.btnRegister)
+                            .setBackgroundTint(ContextCompat.getColor(this, R.color.red))
+                            .setTextColor(Color.WHITE)
+                            .show()
                     }
                 }
         }
+
+        val tvPasswordWarning = findViewById<TextView>(R.id.tvPasswordWarning)
+        val tvConfirmPasswordWarning = findViewById<TextView>(R.id.tvConfirmPasswordWarning)
+
+        etPassword.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val password = s.toString()
+                if (password.length in 1..5) {
+                    tvPasswordWarning.text = "Password must be at least 6 characters"
+                    tvPasswordWarning.visibility = TextView.VISIBLE
+                } else {
+                    tvPasswordWarning.visibility = TextView.GONE
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        etConfirmPassword.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val password = etPassword.text.toString()
+                val confirmPassword = s.toString()
+
+                if (confirmPassword != password) {
+                    tvConfirmPasswordWarning.text = "Password does not match"
+                    tvConfirmPasswordWarning.visibility = TextView.VISIBLE
+                } else {
+                    tvConfirmPasswordWarning.visibility = TextView.GONE
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
 
         tvToLogin.setOnClickListener {
             val intent = Intent(this@RegisterActivity, LoginActivity::class.java)
