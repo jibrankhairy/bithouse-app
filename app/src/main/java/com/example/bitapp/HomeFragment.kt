@@ -59,12 +59,12 @@ class HomeFragment : Fragment() {
             with(sharedPref.edit()) {
                 putString("firstName", profile.firstName)
                 putString("lastName", profile.lastName)
-                putInt("idKaryawan", profile.idKaryawan)  // ✅ ubah jadi int
+                putInt("idKaryawan", profile.idKaryawan)
                 putString("email", profile.email)
                 apply()
             }
 
-            fetchAbsensi(profile.idKaryawan) // ✅ tetap dipanggil dengan Int
+            fetchAbsensi(profile.idKaryawan)
         })
 
         viewModel.fetchUserProfile()
@@ -73,7 +73,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun fetchAbsensi(idKaryawan: Int) {
-        val url = "https://api-bit-2-429534243481.asia-southeast2.run.app/absensi/$idKaryawan" // ✅ convert Int ke String otomatis
+        val url = "https://api-bit-2-429534243481.asia-southeast2.run.app/absensi/$idKaryawan"
         val request = Request.Builder().url(url).build()
         val client = OkHttpClient()
 
@@ -105,6 +105,13 @@ class HomeFragment : Fragment() {
                         checkInText.text = if (checkInRaw.isNotEmpty()) formatJam(checkInRaw) else "-"
                         statusInText.text = if (statusInRaw.isNotEmpty()) statusInRaw else "Not yet checked in"
                         checkOutText.text = if (checkOutRaw.isNotEmpty()) formatJam(checkOutRaw) else "-"
+
+                        val sharedPref = requireContext().getSharedPreferences("notif_pref", android.content.Context.MODE_PRIVATE)
+                        with(sharedPref.edit()) {
+                            putString("notifCheckIn", if (checkInRaw.isNotEmpty()) "Check in berhasil pada pukul ${formatJam(checkInRaw)} WIB" else "")
+                            putString("notifCheckOut", if (checkOutRaw.isNotEmpty()) "Check out berhasil pada pukul ${formatJam(checkOutRaw)} WIB" else "")
+                            apply()
+                        }
                     }
                 }
             }
