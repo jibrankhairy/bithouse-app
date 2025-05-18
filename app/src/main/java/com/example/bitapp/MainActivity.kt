@@ -2,6 +2,7 @@ package com.example.bitapp
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
@@ -49,12 +50,11 @@ class MainActivity : AppCompatActivity() {
                 .setTitle("Konfirmasi")
                 .setMessage("Apakah Anda ingin registrasi fingerprint?")
                 .setPositiveButton("Ya") { _, _ ->
-                    sendUserDataToEsp32(user?.uid)
+                    checkFingerprintLimitAndSend(user?.uid)
                 }
                 .setNegativeButton("Batal", null)
                 .show()
         }
-
     }
 
     private fun loadFragment(fragment: Fragment) {
@@ -63,22 +63,57 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
-    private fun sendUserDataToEsp32(uid: String?) {
+    private fun checkFingerprintLimitAndSend(uid: String?) {
         if (uid == null) {
             Toast.makeText(this, "User tidak ditemukan", Toast.LENGTH_SHORT).show()
             return
         }
 
         val firestore = FirebaseFirestore.getInstance()
+        val fingerprintRef = firestore.collection("fingerprints").document(uid)
+
+        fingerprintRef.get().addOnSuccessListener { fingerprintDoc ->
+            if (fingerprintDoc != null && fingerprintDoc.exists()) {
+                val hasFingerprint1 = fingerprintDoc.contains("id_fingerprint_1")
+                val hasFingerprint2 = fingerprintDoc.contains("id_fingerprint_2")
+
+                val jumlahFingerprint = listOf(hasFingerprint1, hasFingerprint2).count { it }
+
+                if (jumlahFingerprint >= 2) {
+                    showMaxFingerprintDialog()
+                    return@addOnSuccessListener
+                }
+            }
+            sendUserDataToEsp32(uid)
+        }.addOnFailureListener {
+            Toast.makeText(this, "Gagal cek fingerprint", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showMaxFingerprintDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_max_fingerprint, null)
+        val alertDialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        val btnOk = dialogView.findViewById<Button>(R.id.btnOk)
+        btnOk.setOnClickListener { alertDialog.dismiss() }
+
+        alertDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        alertDialog.show()
+    }
+
+    private fun sendUserDataToEsp32(uid: String) {
+        val firestore = FirebaseFirestore.getInstance()
         val userRef = firestore.collection("users").document(uid)
 
         userRef.get().addOnSuccessListener { document ->
             if (document != null && document.exists()) {
-                val idKaryawanStr = document.getString("idKaryawan") ?: ""
+                val idKaryawan = document.getLong("idKaryawan")?.toInt()
                 val firstName = document.getString("firstName") ?: ""
                 val lastName = document.getString("lastName") ?: ""
 
-                val idKaryawan = idKaryawanStr.toIntOrNull()
                 if (idKaryawan == null) {
                     Toast.makeText(this, "ID Karyawan tidak valid", Toast.LENGTH_SHORT).show()
                     return@addOnSuccessListener
@@ -91,7 +126,7 @@ class MainActivity : AppCompatActivity() {
                     "firstName": "$firstName",
                     "lastName": "$lastName"
                 }
-            """.trimIndent()
+                """.trimIndent()
 
                 val mediaType = "application/json; charset=utf-8".toMediaType()
                 val body = json.toRequestBody(mediaType)
