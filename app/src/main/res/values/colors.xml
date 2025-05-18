@@ -6,7 +6,7 @@
     <color name="primary">#166C8F</color>
     <color name="text_gray">#868686</color>
     <color name="field_border">#DADADA</color>
-    <color name="light_cream">#FAF3E0</color>
+    <color name="gray">#EEEEEE</color>
     <color name="ripple_light">#33000000</color>
     <color name="purple">#6555F1</color>
     <color name="secondary">#1C67F6</color>

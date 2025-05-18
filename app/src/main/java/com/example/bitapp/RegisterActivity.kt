@@ -41,16 +41,16 @@ class RegisterActivity : AppCompatActivity() {
         btnRegister.setOnClickListener {
             val firstName = etFirstName.text.toString().trim()
             val lastName = etLastName.text.toString().trim()
-            val idKaryawanText = etIdKaryawan.text.toString().trim()
+            val idKaryawanStr  = etIdKaryawan.text.toString().trim()
             val email = etEmail.text.toString().trim()
             val password = etPassword.text.toString().trim()
 
-            if (firstName.isEmpty() || lastName.isEmpty() || idKaryawanText.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            if (firstName.isEmpty() || lastName.isEmpty() || idKaryawanStr.isEmpty() || email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Semua kolom harus diisi", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val idKaryawan = idKaryawanText.toIntOrNull()
+            val idKaryawan = idKaryawanStr.toIntOrNull()
             if (idKaryawan == null) {
                 Toast.makeText(this, "ID Karyawan harus berupa angka", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener

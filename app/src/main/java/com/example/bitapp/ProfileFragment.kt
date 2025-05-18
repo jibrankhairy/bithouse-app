@@ -25,17 +25,15 @@ class ProfileFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.activity_fragment_profile, container, false)
 
-        val cardEditProfile =view.findViewById<CardView>(R.id.editProfile)
-        val cardFingerprintsProfile =view.findViewById<CardView>(R.id.fingerprintsProfile)
-
+        val cardEditProfile = view.findViewById<CardView>(R.id.editProfile)
+        val cardFingerprintsProfile = view.findViewById<CardView>(R.id.fingerprintsProfile)
 
         cardEditProfile.setOnClickListener {
-            val intent = Intent(requireContext(), EditProfile::class.java)
-            startActivity(intent)
+            startActivity(Intent(requireContext(), EditProfile::class.java))
         }
+
         cardFingerprintsProfile.setOnClickListener {
-            val intent = Intent(requireContext(), FingerprintsProfile::class.java)
-            startActivity(intent)
+            startActivity(Intent(requireContext(), FingerprintsProfile::class.java))
         }
 
         usernameText = view.findViewById(R.id.usernameText)
@@ -46,7 +44,7 @@ class ProfileFragment : Fragment() {
         val sharedPref = requireContext().getSharedPreferences("user_pref", Context.MODE_PRIVATE)
         val firstName = sharedPref.getString("firstName", "")
         val lastName = sharedPref.getString("lastName", "")
-        val idKaryawan = sharedPref.getString("idKaryawan", "")
+        val idKaryawan = sharedPref.getInt("idKaryawan", 0)
         val email = sharedPref.getString("email", "")
 
         usernameText.text = "$firstName $lastName"
@@ -59,7 +57,6 @@ class ProfileFragment : Fragment() {
                 .setMessage("Apakah Anda yakin ingin logout?")
                 .setPositiveButton("Ya") { _, _ ->
                     sharedPref.edit().clear().apply()
-
                     FirebaseAuth.getInstance().signOut()
 
                     val intent = Intent(requireContext(), LoginActivity::class.java)

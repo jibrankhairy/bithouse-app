@@ -15,12 +15,15 @@ import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
 
+// ... (import tetap)
+
 class HomeFragment : Fragment() {
 
     private lateinit var usernameText: TextView
     private lateinit var employeeIdText: TextView
     private lateinit var checkInText: TextView
     private lateinit var checkOutText: TextView
+    private lateinit var statusInText: TextView
     private lateinit var viewModel: HomeViewModel
 
     override fun onCreateView(
@@ -33,17 +36,16 @@ class HomeFragment : Fragment() {
         val calendarIcon = view.findViewById<FrameLayout>(R.id.calendarIcon)
 
         notificationIcon.setOnClickListener {
-            val intent = Intent(requireContext(), Notification::class.java)
-            startActivity(intent)
+            startActivity(Intent(requireContext(), Notification::class.java))
         }
 
         calendarIcon.setOnClickListener {
-            val intent = Intent(requireContext(), Calendar::class.java)
-            startActivity(intent)
+            startActivity(Intent(requireContext(), Calendar::class.java))
         }
 
         usernameText = view.findViewById(R.id.usernameText)
         employeeIdText = view.findViewById(R.id.employeeIdText)
+        statusInText = view.findViewById(R.id.StatusInText)
         checkInText = view.findViewById(R.id.CheckInText)
         checkOutText = view.findViewById(R.id.CheckOutText)
 
@@ -57,12 +59,12 @@ class HomeFragment : Fragment() {
             with(sharedPref.edit()) {
                 putString("firstName", profile.firstName)
                 putString("lastName", profile.lastName)
-                putString("idKaryawan", profile.idKaryawan)
+                putInt("idKaryawan", profile.idKaryawan)  // ✅ ubah jadi int
                 putString("email", profile.email)
                 apply()
             }
 
-            fetchAbsensi(profile.idKaryawan)
+            fetchAbsensi(profile.idKaryawan) // ✅ tetap dipanggil dengan Int
         })
 
         viewModel.fetchUserProfile()
@@ -70,14 +72,18 @@ class HomeFragment : Fragment() {
         return view
     }
 
-    private fun fetchAbsensi(idKaryawan: String) {
-        val url = "http://192.168.1.5:3001/absensi/$idKaryawan"
+    private fun fetchAbsensi(idKaryawan: Int) {
+        val url = "https://api-bit-2-429534243481.asia-southeast2.run.app/absensi/$idKaryawan" // ✅ convert Int ke String otomatis
         val request = Request.Builder().url(url).build()
         val client = OkHttpClient()
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
+                activity?.runOnUiThread {
+                    checkInText.text = "Gagal memuat"
+                    checkOutText.text = "Gagal memuat"
+                }
             }
 
             override fun onResponse(call: Call, response: Response) {
@@ -88,31 +94,30 @@ class HomeFragment : Fragment() {
                     val json = JSONObject(body)
                     val data = json.optJSONObject("data")
 
-                    val checkInRaw = data?.optString("check_in", "") ?: ""
-                    val checkOutRaw = data?.optString("check_out", "") ?: ""
+                    val checkInObj = data?.optJSONObject("check_in")
+                    val checkInRaw = checkInObj?.optString("waktu", "") ?: ""
+                    val statusInRaw = checkInObj?.optString("status", "") ?: ""
 
-                    Log.d("HomeFragment", "checkInRaw: $checkInRaw")
-                    Log.d("HomeFragment", "checkOutRaw: $checkOutRaw")
-
-                    val checkInTime = extractTime(checkInRaw)
-                    val checkOutTime = extractTime(checkOutRaw)
+                    val rawOut = data?.opt("check_out")
+                    val checkOutRaw = if (rawOut != null && rawOut != JSONObject.NULL) rawOut.toString() else ""
 
                     activity?.runOnUiThread {
-                        checkInText.text = checkInTime ?: "—"
-                        checkOutText.text = checkOutTime ?: "—"
+                        checkInText.text = if (checkInRaw.isNotEmpty()) formatJam(checkInRaw) else "-"
+                        statusInText.text = if (statusInRaw.isNotEmpty()) statusInRaw else "Not yet checked in"
+                        checkOutText.text = if (checkOutRaw.isNotEmpty()) formatJam(checkOutRaw) else "-"
                     }
                 }
             }
-
         })
     }
 
-    private fun extractTime(datetime: String): String? {
+    private fun formatJam(jam: String): String {
         return try {
-            val timePart = datetime.split(",").getOrNull(1)?.trim() // "09.58.43"
-            timePart?.split(".")?.take(2)?.joinToString(":") // jadi "09:58"
+            val parts = jam.split(".")
+            if (parts.size >= 2) "${parts[0]}:${parts[1]}" else jam
         } catch (e: Exception) {
-            null
+            "—"
         }
     }
 }
+

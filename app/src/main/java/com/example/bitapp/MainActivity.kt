@@ -74,24 +74,30 @@ class MainActivity : AppCompatActivity() {
 
         userRef.get().addOnSuccessListener { document ->
             if (document != null && document.exists()) {
-                val idKaryawan = document.getString("idKaryawan") ?: ""
+                val idKaryawanStr = document.getString("idKaryawan") ?: ""
                 val firstName = document.getString("firstName") ?: ""
                 val lastName = document.getString("lastName") ?: ""
 
+                val idKaryawan = idKaryawanStr.toIntOrNull()
+                if (idKaryawan == null) {
+                    Toast.makeText(this, "ID Karyawan tidak valid", Toast.LENGTH_SHORT).show()
+                    return@addOnSuccessListener
+                }
+
                 val json = """
-                    {
-                        "uid": "$uid",
-                        "idKaryawan": "$idKaryawan",
-                        "firstName": "$firstName",
-                        "lastName": "$lastName"
-                    }
-                """.trimIndent()
+                {
+                    "uid": "$uid",
+                    "idKaryawan": $idKaryawan,
+                    "firstName": "$firstName",
+                    "lastName": "$lastName"
+                }
+            """.trimIndent()
 
                 val mediaType = "application/json; charset=utf-8".toMediaType()
                 val body = json.toRequestBody(mediaType)
 
                 val request = Request.Builder()
-                    .url("http://192.168.6.148/register/start") // GANTI IP sesuai ESP32 kamu
+                    .url("http://192.168.53.148/register/start") // GANTI IP sesuai ESP32 kamu
                     .post(body)
                     .build()
 

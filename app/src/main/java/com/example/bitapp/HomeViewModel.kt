@@ -9,7 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 data class UserProfile(
     val firstName: String = "",
     val lastName: String = "",
-    val idKaryawan: String = "",
+    val idKaryawan: Int = 0,
     val email: String = ""
 )
 
@@ -31,7 +31,7 @@ class HomeViewModel : ViewModel() {
                     val profile = UserProfile(
                         firstName = document.getString("firstName") ?: "",
                         lastName = document.getString("lastName") ?: "",
-                        idKaryawan = document.getString("idKaryawan") ?: "",
+                        idKaryawan = document.getLong("idKaryawan")?.toInt() ?: 0,
                         email = document.getString("email") ?: ""
                     )
                     _userProfile.value = profile

@@ -34,18 +34,18 @@ class EditProfile : AppCompatActivity() {
         val uid = currentUser?.uid
 
         val backButton = findViewById<ImageView>(R.id.backButton)
-        backButton.setOnClickListener {
-            finish()
-        }
+        backButton.setOnClickListener { finish() }
 
         if (uid != null) {
-            emailText.setText(currentUser?.email)
+            emailText.setText(currentUser.email)
+
             db.collection("users").document(uid).get()
                 .addOnSuccessListener { document ->
                     if (document != null && document.exists()) {
-                        firstNameInput.setText(document.getString("firstName"))
-                        lastNameInput.setText(document.getString("lastName"))
-                        idKaryawanInput.setText(document.getString("idKaryawan"))
+                        firstNameInput.setText(document.getString("firstName") ?: "")
+                        lastNameInput.setText(document.getString("lastName") ?: "")
+                        val idKaryawan = document.getLong("idKaryawan")?.toInt() ?: 0
+                        idKaryawanInput.setText(idKaryawan.toString())
                     }
                 }
                 .addOnFailureListener {
@@ -55,34 +55,44 @@ class EditProfile : AppCompatActivity() {
             saveButton.setOnClickListener {
                 val newFirstName = firstNameInput.text.toString().trim()
                 val newLastName = lastNameInput.text.toString().trim()
-                val newIdKaryawan = idKaryawanInput.text.toString().trim()
+                val newIdKaryawanStr = idKaryawanInput.text.toString().trim()
+
+                if (newFirstName.isEmpty() || newLastName.isEmpty() || newIdKaryawanStr.isEmpty()) {
+                    Toast.makeText(this, "Semua field harus diisi", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                val newIdKaryawan = try {
+                    newIdKaryawanStr.toInt()
+                } catch (e: NumberFormatException) {
+                    Toast.makeText(this, "ID Karyawan harus berupa angka", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
 
                 val sharedPref = getSharedPreferences("user_pref", MODE_PRIVATE)
-                val oldIdKaryawan = sharedPref.getString("idKaryawan", "") ?: ""
+                val oldIdKaryawan = sharedPref.getInt("idKaryawan", 0)
 
                 val updates = mapOf(
                     "firstName" to newFirstName,
                     "lastName" to newLastName,
-                    "idKaryawan" to newIdKaryawan
+                    "idKaryawan" to newIdKaryawan // ✅ pastikan number, bukan string
                 )
 
                 db.collection("users").document(uid).update(updates)
                     .addOnSuccessListener {
-                        db.collection("fingerprints").document(uid)
-                            .update(
-                                mapOf(
-                                    "idKaryawan" to newIdKaryawan,
-                                    "firstName" to newFirstName,
-                                    "lastName" to newLastName
-                                )
+                        db.collection("fingerprints").document(uid).update(
+                            mapOf(
+                                "idKaryawan" to newIdKaryawan,
+                                "firstName" to newFirstName,
+                                "lastName" to newLastName
                             )
-                            .addOnFailureListener {
-                                Toast.makeText(this, "Gagal update idKaryawan di fingerprints", Toast.LENGTH_SHORT).show()
-                            }
+                        ).addOnFailureListener {
+                            Toast.makeText(this, "Gagal update idKaryawan di fingerprints", Toast.LENGTH_SHORT).show()
+                        }
 
                         if (oldIdKaryawan != newIdKaryawan) {
-                            val oldRef = db.collection("absensi").document(oldIdKaryawan).collection("tanggal")
-                            val newRef = db.collection("absensi").document(newIdKaryawan).collection("tanggal")
+                            val oldRef = db.collection("absensi").document(oldIdKaryawan.toString()).collection("tanggal")
+                            val newRef = db.collection("absensi").document(newIdKaryawan.toString()).collection("tanggal")
 
                             oldRef.get().addOnSuccessListener { snapshot ->
                                 for (doc in snapshot.documents) {
@@ -91,19 +101,17 @@ class EditProfile : AppCompatActivity() {
                                         newRef.document(doc.id).set(data)
                                     }
                                 }
-
                                 for (doc in snapshot.documents) {
                                     oldRef.document(doc.id).delete()
                                 }
-
-                                db.collection("absensi").document(oldIdKaryawan).delete()
+                                db.collection("absensi").document(oldIdKaryawan.toString()).delete()
                             }
                         }
 
                         with(sharedPref.edit()) {
                             putString("firstName", newFirstName)
                             putString("lastName", newLastName)
-                            putString("idKaryawan", newIdKaryawan)
+                            putInt("idKaryawan", newIdKaryawan) // ✅ simpan sebagai Int
                             apply()
                         }
 
