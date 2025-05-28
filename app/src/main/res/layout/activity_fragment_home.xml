@@ -58,8 +58,9 @@
                             <ImageView
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-                                android:src="@drawable/bithouse"
-                                android:scaleType="centerCrop" />
+                                android:layout_margin="6dp"
+                                android:src="@drawable/ic_fingerprint_home"
+                                android:scaleType="centerInside" />
                         </androidx.cardview.widget.CardView>
 
                         <TextView

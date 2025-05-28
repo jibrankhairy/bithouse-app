@@ -27,6 +27,7 @@ class ProfileFragment : Fragment() {
 
         val cardEditProfile = view.findViewById<CardView>(R.id.editProfile)
         val cardFingerprintsProfile = view.findViewById<CardView>(R.id.fingerprintsProfile)
+        val cardHistoryProfile = view.findViewById<CardView>(R.id.historyProfile)
 
         cardEditProfile.setOnClickListener {
             startActivity(Intent(requireContext(), EditProfile::class.java))
@@ -34,6 +35,10 @@ class ProfileFragment : Fragment() {
 
         cardFingerprintsProfile.setOnClickListener {
             startActivity(Intent(requireContext(), FingerprintsProfile::class.java))
+        }
+
+        cardHistoryProfile.setOnClickListener {
+            startActivity(Intent(requireContext(), HistoryProfile::class.java))
         }
 
         usernameText = view.findViewById(R.id.usernameText)

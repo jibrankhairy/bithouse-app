@@ -132,7 +132,7 @@ class MainActivity : AppCompatActivity() {
                 val body = json.toRequestBody(mediaType)
 
                 val request = Request.Builder()
-                    .url("http://192.168.53.148/register/start") // GANTI IP sesuai ESP32 kamu
+                    .url("http://192.168.9.148/register/start")
                     .post(body)
                     .build()
 

@@ -2,7 +2,7 @@
 <network-security-config>
     <!-- Konfigurasi untuk ESP32 -->
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">192.168.53.148</domain>
+        <domain includeSubdomains="true">192.168.9.148</domain>
     </domain-config>
 
     <!-- Konfigurasi untuk server Node.js -->

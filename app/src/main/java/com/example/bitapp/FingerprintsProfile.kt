@@ -11,6 +11,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.IOException
 
 class FingerprintsProfile : AppCompatActivity() {
 
@@ -18,6 +22,7 @@ class FingerprintsProfile : AppCompatActivity() {
     private lateinit var adapter: FingerprintAdapter
     private val firestore = FirebaseFirestore.getInstance()
     private var uid: String? = null
+    private val client = OkHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,9 +71,9 @@ class FingerprintsProfile : AppCompatActivity() {
         val fingerDataKey = fingerprintKey.replace("id_fingerprint_", "finger_data_")
 
         androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Konfirmasi")
-            .setMessage("Apakah Anda ingin menghapus fingerprint ini?")
-            .setPositiveButton("Ya") { _, _ ->
+            .setTitle("Confirmation")
+            .setMessage("Do you want to delete this fingerprint?")
+            .setPositiveButton("Yes") { _, _ ->
                 uid?.let { currentUid ->
                     firestore.collection("fingerprints").document(currentUid)
                         .update(
@@ -78,8 +83,49 @@ class FingerprintsProfile : AppCompatActivity() {
                             )
                         )
                         .addOnSuccessListener {
-                            Toast.makeText(this, "Fingerprint dihapus", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "Fingerprint deleted", Toast.LENGTH_SHORT).show()
                             loadFingerprints()
+
+                            // Kirim request ke ESP32 untuk hapus fingerprint dari sensor
+                            val fingerprintId = fingerprintKey.removePrefix("id_fingerprint_").toIntOrNull()
+                            if (fingerprintId != null) {
+                                val json = """
+                                    {
+                                        "fingerprintId": $fingerprintId
+                                    }
+                                """.trimIndent()
+
+                                val mediaType = "application/json; charset=utf-8".toMediaType()
+                                val body = json.toRequestBody(mediaType)
+
+                                val request = Request.Builder()
+                                    .url("http://192.168.9.148/delete/start") // Ganti IP sesuai ESP32 kamu
+                                    .post(body)
+                                    .build()
+
+                                client.newCall(request).enqueue(object : Callback {
+                                    override fun onFailure(call: Call, e: IOException) {
+                                        runOnUiThread {
+                                            Toast.makeText(
+                                                this@FingerprintsProfile,
+                                                "Gagal kirim ke ESP32",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+
+                                    override fun onResponse(call: Call, response: Response) {
+                                        val respText = response.body?.string()
+                                        runOnUiThread {
+                                            Toast.makeText(
+                                                this@FingerprintsProfile,
+                                                "ESP32: $respText",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+                                })
+                            }
                         }
                         .addOnFailureListener {
                             Toast.makeText(this, "Gagal hapus fingerprint", Toast.LENGTH_SHORT).show()
@@ -89,5 +135,4 @@ class FingerprintsProfile : AppCompatActivity() {
             .setNegativeButton("Batal", null)
             .show()
     }
-
 }
