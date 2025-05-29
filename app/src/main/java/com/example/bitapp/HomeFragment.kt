@@ -15,7 +15,6 @@ import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
 
-// ... (import tetap)
 
 class HomeFragment : Fragment() {
 
@@ -24,6 +23,7 @@ class HomeFragment : Fragment() {
     private lateinit var checkInText: TextView
     private lateinit var checkOutText: TextView
     private lateinit var statusInText: TextView
+    private lateinit var totalHoursText: TextView
     private lateinit var viewModel: HomeViewModel
 
     override fun onCreateView(
@@ -48,6 +48,7 @@ class HomeFragment : Fragment() {
         statusInText = view.findViewById(R.id.StatusInText)
         checkInText = view.findViewById(R.id.CheckInText)
         checkOutText = view.findViewById(R.id.CheckOutText)
+        totalHoursText = view.findViewById(R.id.TotalHoursText)
 
         viewModel = ViewModelProvider(this)[HomeViewModel::class.java]
 
@@ -108,9 +109,41 @@ class HomeFragment : Fragment() {
 
                         val sharedPref = requireContext().getSharedPreferences("notif_pref", android.content.Context.MODE_PRIVATE)
                         with(sharedPref.edit()) {
-                            putString("notifCheckIn", if (checkInRaw.isNotEmpty()) "Check in berhasil pada pukul ${formatJam(checkInRaw)} WIB" else "")
-                            putString("notifCheckOut", if (checkOutRaw.isNotEmpty()) "Check out berhasil pada pukul ${formatJam(checkOutRaw)} WIB" else "")
+                            putString("notifCheckIn", if (checkInRaw.isNotEmpty()) "Check in was successful at ${formatJam(checkInRaw)} WIB" else "")
+                            putString("notifCheckOut", if (checkOutRaw.isNotEmpty()) "Check out was successful at ${formatJam(checkOutRaw)} WIB" else "")
                             apply()
+                        }
+
+                        if (checkInRaw.isNotEmpty() && checkOutRaw.isNotEmpty()) {
+                            try {
+                                val inParts = checkInRaw.split(".")
+                                val outParts = checkOutRaw.split(".")
+
+                                if (inParts.size >= 2 && outParts.size >= 2) {
+                                    val jamIn = inParts[0].toInt()
+                                    val menitIn = inParts[1].toInt()
+                                    val jamOut = outParts[0].toInt()
+                                    val menitOut = outParts[1].toInt()
+
+                                    val totalMenitIn = jamIn * 60 + menitIn
+                                    val totalMenitOut = jamOut * 60 + menitOut
+                                    val selisihMenit = totalMenitOut - totalMenitIn
+
+                                    totalHoursText.text = when {
+                                        selisihMenit < 0 -> "-"
+                                        selisihMenit < 60 -> "$selisihMenit min"
+                                        selisihMenit % 60 == 0 -> "${selisihMenit / 60} h"
+                                        else -> "${selisihMenit / 60} h ${selisihMenit % 60} min"
+                                    }
+                                } else {
+                                    totalHoursText.text = "-"
+                                }
+                            } catch (e: Exception) {
+                                Log.e("HomeFragment", "Error parsing jam: $e")
+                                totalHoursText.text = "-"
+                            }
+                        } else {
+                            totalHoursText.text = "-"
                         }
                     }
                 }
