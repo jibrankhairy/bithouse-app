@@ -87,37 +87,52 @@ class RegisterActivity : AppCompatActivity() {
             auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        val uid = auth.currentUser?.uid ?: ""
-                        val user = hashMapOf(
-                            "firstName" to firstName,
-                            "lastName" to lastName,
-                            "idKaryawan" to idKaryawan,
-                            "email" to email
-                        )
+                        val firebaseUser = auth.currentUser
+                        firebaseUser?.sendEmailVerification()
+                            ?.addOnCompleteListener { verifyTask ->
+                                if (verifyTask.isSuccessful) {
+                                    val uid = firebaseUser.uid
+                                    val user = hashMapOf(
+                                        "firstName" to firstName,
+                                        "lastName" to lastName,
+                                        "idKaryawan" to idKaryawan,
+                                        "email" to email
+                                    )
 
-                        db.collection("users").document(uid).set(user)
-                            .addOnSuccessListener {
-                                val snackbar = Snackbar.make(findViewById(android.R.id.content), "Registrasi Successfull!", Snackbar.LENGTH_LONG)
-                                    .setAnchorView(R.id.btnRegister)
-                                    .setBackgroundTint(ContextCompat.getColor(this, R.color.secondary))
-                                    .setTextColor(Color.WHITE)
+                                    db.collection("users").document(uid).set(user)
+                                        .addOnSuccessListener {
+                                            val snackbar = Snackbar.make(findViewById(android.R.id.content),
+                                                "Registration successful. Email verification sent!",
+                                                Snackbar.LENGTH_LONG
+                                            )
+                                                .setAnchorView(R.id.btnRegister)
+                                                .setBackgroundTint(ContextCompat.getColor(this, R.color.secondary))
+                                                .setTextColor(Color.WHITE)
 
-                                snackbar.show()
+                                            snackbar.show()
 
-                                Handler(Looper.getMainLooper()).postDelayed({
-                                    startActivity(Intent(this, LoginActivity::class.java))
-                                    finish()
-                                }, 1500)
-                            }
-                            .addOnFailureListener { e ->
-                                Snackbar.make(findViewById(android.R.id.content), "Failed to save data: ${e.message}", Snackbar.LENGTH_LONG)
-                                    .setAnchorView(R.id.btnRegister)
-                                    .setBackgroundTint(ContextCompat.getColor(this, R.color.red))
-                                    .setTextColor(Color.WHITE)
-                                    .show()
+                                            Handler(Looper.getMainLooper()).postDelayed({
+                                                startActivity(Intent(this, LoginActivity::class.java))
+                                                finish()
+                                            }, 2000)
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Snackbar.make(findViewById(android.R.id.content), "Failed to save data: ${e.message}", Snackbar.LENGTH_LONG)
+                                                .setAnchorView(R.id.btnRegister)
+                                                .setBackgroundTint(ContextCompat.getColor(this, R.color.red))
+                                                .setTextColor(Color.WHITE)
+                                                .show()
+                                        }
+                                } else {
+                                    Snackbar.make(findViewById(android.R.id.content), "Failed to send email verification: ${verifyTask.exception?.message}", Snackbar.LENGTH_LONG)
+                                        .setAnchorView(R.id.btnRegister)
+                                        .setBackgroundTint(ContextCompat.getColor(this, R.color.red))
+                                        .setTextColor(Color.WHITE)
+                                        .show()
+                                }
                             }
                     } else {
-                        Snackbar.make(findViewById(android.R.id.content), "Registrasi Failed: ${task.exception?.message}", Snackbar.LENGTH_LONG)
+                        Snackbar.make(findViewById(android.R.id.content), "Registration failed: ${task.exception?.message}", Snackbar.LENGTH_LONG)
                             .setAnchorView(R.id.btnRegister)
                             .setBackgroundTint(ContextCompat.getColor(this, R.color.red))
                             .setTextColor(Color.WHITE)

@@ -96,35 +96,43 @@ class LoginActivity : AppCompatActivity() {
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            val uid = FirebaseAuth.getInstance().currentUser?.uid
-                            if (uid != null) {
+                            val user = FirebaseAuth.getInstance().currentUser
+                            if (user != null && user.isEmailVerified) {
+                                val uid = user.uid
                                 val sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
                                 sharedPreferences.edit().putString("uid", uid).apply()
-                            }
 
-                            // ✅ Simpan login jika Remember Me dicentang
-                            val loginPrefs = getSharedPreferences("loginPrefs", MODE_PRIVATE)
-                            if (checkRemember.isChecked) {
-                                loginPrefs.edit()
-                                    .putBoolean("rememberMe", true)
-                                    .putString("email", email)
-                                    .putString("password", password)
-                                    .apply()
+                                // ✅ Simpan login jika Remember Me dicentang
+                                val loginPrefs = getSharedPreferences("loginPrefs", MODE_PRIVATE)
+                                if (checkRemember.isChecked) {
+                                    loginPrefs.edit()
+                                        .putBoolean("rememberMe", true)
+                                        .putString("email", email)
+                                        .putString("password", password)
+                                        .apply()
+                                } else {
+                                    loginPrefs.edit().clear().apply()
+                                }
+
+                                Snackbar.make(snackbarAnchor, "Login Successful!", Snackbar.LENGTH_LONG)
+                                    .setAnchorView(snackbarAnchor)
+                                    .setBackgroundTint(ContextCompat.getColor(this, R.color.secondary))
+                                    .setTextColor(Color.WHITE)
+                                    .show()
+
+                                Handler(Looper.getMainLooper()).postDelayed({
+                                    startActivity(Intent(this, MainActivity::class.java))
+                                    finish()
+                                }, 1000)
                             } else {
-                                loginPrefs.edit().clear().apply()
+                                // Email belum diverifikasi
+                                Snackbar.make(snackbarAnchor, "Please verify your email before logging in", Snackbar.LENGTH_LONG)
+                                    .setAnchorView(snackbarAnchor)
+                                    .setBackgroundTint(ContextCompat.getColor(this, R.color.red))
+                                    .setTextColor(Color.WHITE)
+                                    .show()
+                                auth.signOut()
                             }
-
-                            Snackbar.make(snackbarAnchor, "Login Successful!", Snackbar.LENGTH_LONG)
-                                .setAnchorView(snackbarAnchor)
-                                .setBackgroundTint(ContextCompat.getColor(this, R.color.secondary))
-                                .setTextColor(Color.WHITE)
-                                .show()
-
-                            Handler(Looper.getMainLooper()).postDelayed({
-                                startActivity(Intent(this, MainActivity::class.java))
-                                finish()
-                            }, 1000)
-
                         } else {
                             Snackbar.make(snackbarAnchor, "Login Failed! Incorrect email or password", Snackbar.LENGTH_LONG)
                                 .setAnchorView(snackbarAnchor)
