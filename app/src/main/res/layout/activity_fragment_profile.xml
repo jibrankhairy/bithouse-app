@@ -60,7 +60,7 @@
             android:textColor="@color/text_gray" />
 
         <androidx.cardview.widget.CardView
-            android:layout_width="300dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="15dp"
             app:cardBackgroundColor="@color/purple"

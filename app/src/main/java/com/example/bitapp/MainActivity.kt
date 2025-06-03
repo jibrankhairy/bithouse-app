@@ -46,15 +46,28 @@ class MainActivity : AppCompatActivity() {
         val user = auth.currentUser
 
         fab_fingerprint.setOnClickListener {
-            androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Konfirmasi")
-                .setMessage("Apakah Anda ingin registrasi fingerprint?")
-                .setPositiveButton("Ya") { _, _ ->
-                    checkFingerprintLimitAndSend(user?.uid)
-                }
-                .setNegativeButton("Batal", null)
-                .show()
+            val dialogView = layoutInflater.inflate(R.layout.dialog_register_fingerprint, null)
+            val alertDialog = androidx.appcompat.app.AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setCancelable(false)
+                .create()
+
+            val btnYes = dialogView.findViewById<Button>(R.id.btn_yes)
+            val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
+
+            btnYes.setOnClickListener {
+                checkFingerprintLimitAndSend(user?.uid)
+                alertDialog.dismiss()
+            }
+
+            btnCancel.setOnClickListener {
+                alertDialog.dismiss()
+            }
+
+            alertDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+            alertDialog.show()
         }
+
     }
 
     private fun loadFragment(fragment: Fragment) {
@@ -132,7 +145,7 @@ class MainActivity : AppCompatActivity() {
                 val body = json.toRequestBody(mediaType)
 
                 val request = Request.Builder()
-                    .url("http://192.168.9.148/register/start")
+                    .url("http://192.168.201.148/register/start")
                     .post(body)
                     .build()
 

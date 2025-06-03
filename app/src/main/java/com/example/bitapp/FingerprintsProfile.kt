@@ -3,12 +3,18 @@ package com.example.bitapp
 import FingerprintAdapter
 import FingerprintItem
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import okhttp3.*
@@ -31,7 +37,6 @@ class FingerprintsProfile : AppCompatActivity() {
         val backButton = findViewById<ImageView>(R.id.backButton)
         backButton.setOnClickListener { finish() }
 
-        // Ambil UID dari SharedPreferences
         val sharedPref = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
         uid = sharedPref.getString("uid", null)
 
@@ -44,7 +49,7 @@ class FingerprintsProfile : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         adapter = FingerprintAdapter(emptyList()) { fingerprint ->
-            deleteFingerprint(fingerprint.key)
+            showDeleteDialog(fingerprint.key)
         }
         recyclerView.adapter = adapter
 
@@ -67,14 +72,30 @@ class FingerprintsProfile : AppCompatActivity() {
         }
     }
 
-    private fun deleteFingerprint(fingerprintKey: String) {
+    private fun showDeleteDialog(fingerprintKey: String) {
         val fingerDataKey = fingerprintKey.replace("id_fingerprint_", "finger_data_")
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_delete_fingerprint, null)
+        val dialog = android.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
 
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Confirmation")
-            .setMessage("Do you want to delete this fingerprint?")
-            .setPositiveButton("Yes") { _, _ ->
-                uid?.let { currentUid ->
+        val btnYes = dialogView.findViewById<Button>(R.id.btn_yes)
+        val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
+
+        btnYes.setOnClickListener {
+            dialog.dismiss()
+
+            val lottieView = LayoutInflater.from(this).inflate(R.layout.dialog_loading, null)
+            val lottieDialog = android.app.AlertDialog.Builder(this)
+                .setView(lottieView)
+                .setCancelable(false)
+                .create()
+            lottieDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+            lottieDialog.show()
+
+            uid?.let { currentUid ->
+                android.os.Handler(mainLooper).postDelayed({
                     firestore.collection("fingerprints").document(currentUid)
                         .update(
                             mapOf(
@@ -83,23 +104,28 @@ class FingerprintsProfile : AppCompatActivity() {
                             )
                         )
                         .addOnSuccessListener {
-                            Toast.makeText(this, "Fingerprint deleted", Toast.LENGTH_SHORT).show()
                             loadFingerprints()
+                            lottieDialog.dismiss()
+                            val snackbarAnchor = findViewById<View>(R.id.snackbarAnchor)
+                            Snackbar.make(snackbarAnchor, "Fingerprint deleted", Snackbar.LENGTH_LONG)
+                                .setAnchorView(snackbarAnchor)
+                                .setBackgroundTint(ContextCompat.getColor(this, R.color.secondary))
+                                .setTextColor(Color.WHITE)
+                                .show()
 
-                            // Kirim request ke ESP32 untuk hapus fingerprint dari sensor
                             val fingerprintId = fingerprintKey.removePrefix("id_fingerprint_").toIntOrNull()
                             if (fingerprintId != null) {
                                 val json = """
-                                    {
-                                        "fingerprintId": $fingerprintId
-                                    }
-                                """.trimIndent()
+                        {
+                            "fingerprintId": $fingerprintId
+                        }
+                    """.trimIndent()
 
                                 val mediaType = "application/json; charset=utf-8".toMediaType()
                                 val body = json.toRequestBody(mediaType)
 
                                 val request = Request.Builder()
-                                    .url("http://192.168.9.148/delete/start") // Ganti IP sesuai ESP32 kamu
+                                    .url("http://192.168.201.148/delete/start")
                                     .post(body)
                                     .build()
 
@@ -128,11 +154,18 @@ class FingerprintsProfile : AppCompatActivity() {
                             }
                         }
                         .addOnFailureListener {
+                            lottieDialog.dismiss()
                             Toast.makeText(this, "Gagal hapus fingerprint", Toast.LENGTH_SHORT).show()
                         }
-                }
+                }, 3000) // ⏱️ Delay 3 detik
             }
-            .setNegativeButton("Batal", null)
-            .show()
+        }
+
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
     }
 }

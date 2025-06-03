@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.InputType
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.widget.*
@@ -18,7 +19,8 @@ import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {
 
-    lateinit var auth: FirebaseAuth
+    private lateinit var auth: FirebaseAuth
+    private var loadingDialog: android.app.AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,12 +37,11 @@ class LoginActivity : AppCompatActivity() {
         val etEmail = findViewById<EditText>(R.id.etUsername)
         val etPassword = findViewById<EditText>(R.id.etPassword)
         val btnLogin = findViewById<Button>(R.id.btnLogin)
+        val tvForgotPassword = findViewById<TextView>(R.id.tvForgotPassword)
         val tvToRegister = findViewById<TextView>(R.id.tvToRegister)
         val ivTogglePassword = findViewById<ImageView>(R.id.ivTogglePassword)
         val snackbarAnchor = findViewById<View>(R.id.snackbarAnchor)
         val checkRemember = findViewById<CheckBox>(R.id.checkRemember)
-
-
 
         btnLogin.setOnTouchListener { v, event ->
             when (event.action) {
@@ -55,7 +56,6 @@ class LoginActivity : AppCompatActivity() {
         }
 
         var isPasswordVisible = false
-
         ivTogglePassword.setOnClickListener {
             isPasswordVisible = !isPasswordVisible
             if (isPasswordVisible) {
@@ -70,21 +70,17 @@ class LoginActivity : AppCompatActivity() {
 
         val sharedPreferences = getSharedPreferences("loginPrefs", MODE_PRIVATE)
         val isRemembered = sharedPreferences.getBoolean("rememberMe", false)
-
         if (isRemembered) {
             val savedEmail = sharedPreferences.getString("email", "")
             val savedPassword = sharedPreferences.getString("password", "")
-
             etEmail.setText(savedEmail)
             etPassword.setText(savedPassword)
             checkRemember.isChecked = true
         }
 
-
         btnLogin.setOnClickListener {
             val email = etEmail.text.toString()
             val password = etPassword.text.toString()
-
 
             if (email.isEmpty() || password.isEmpty()) {
                 Snackbar.make(snackbarAnchor, "Email and password cannot be empty", Snackbar.LENGTH_LONG)
@@ -93,16 +89,19 @@ class LoginActivity : AppCompatActivity() {
                     .setTextColor(Color.WHITE)
                     .show()
             } else {
+                showLoadingDialog()
+
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
+                        hideLoadingDialog()
+
                         if (task.isSuccessful) {
                             val user = FirebaseAuth.getInstance().currentUser
                             if (user != null && user.isEmailVerified) {
                                 val uid = user.uid
-                                val sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
-                                sharedPreferences.edit().putString("uid", uid).apply()
+                                getSharedPreferences("MyPrefs", MODE_PRIVATE).edit()
+                                    .putString("uid", uid).apply()
 
-                                // ✅ Simpan login jika Remember Me dicentang
                                 val loginPrefs = getSharedPreferences("loginPrefs", MODE_PRIVATE)
                                 if (checkRemember.isChecked) {
                                     loginPrefs.edit()
@@ -125,7 +124,6 @@ class LoginActivity : AppCompatActivity() {
                                     finish()
                                 }, 1000)
                             } else {
-                                // Email belum diverifikasi
                                 Snackbar.make(snackbarAnchor, "Please verify your email before logging in", Snackbar.LENGTH_LONG)
                                     .setAnchorView(snackbarAnchor)
                                     .setBackgroundTint(ContextCompat.getColor(this, R.color.red))
@@ -145,9 +143,27 @@ class LoginActivity : AppCompatActivity() {
         }
 
         tvToRegister.setOnClickListener {
-            val intent = Intent(this@LoginActivity, RegisterActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this@LoginActivity, RegisterActivity::class.java))
             finish()
         }
+
+        tvForgotPassword.setOnClickListener {
+            startActivity(Intent(this@LoginActivity, ForgotPassword::class.java))
+            finish()
+        }
+    }
+
+    private fun showLoadingDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_loading, null)
+        loadingDialog = android.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+        loadingDialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        loadingDialog?.show()
+    }
+
+    private fun hideLoadingDialog() {
+        loadingDialog?.dismiss()
     }
 }

@@ -7,10 +7,12 @@
     <color name="text_gray">#868686</color>
     <color name="field_border">#DADADA</color>
     <color name="gray">#EEEEEE</color>
+    <color name="gray_light">#EFEFED</color>
     <color name="ripple_light">#33000000</color>
     <color name="purple">#6555F1</color>
     <color name="secondary">#1C67F6</color>
     <color name="text_blue">#4A7ACE</color>
     <color name="bg_icon">#B3C9FF</color>
     <color name="red">#F44336</color>
+    <color name="gray_dark">#757575</color>
 </resources>

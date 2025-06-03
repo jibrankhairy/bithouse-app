@@ -33,6 +33,9 @@
         <activity android:name=".HistoryProfile"/>
         <activity android:name=".Notification"/>
         <activity android:name=".Calendar"/>
+        <activity android:name=".ForgotPassword"/>
+        <activity android:name=".VerifyOtpActivity"/>
+        <activity android:name=".ResetPasswordActivity"/>
     </application>
 
 </manifest>
